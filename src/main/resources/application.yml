@@ -1,0 +1,23 @@
+logging:
+  file:
+    path: logs
+  config: classpath:log4j2.xml
+
+spring:
+  application:
+    name: log-sample
+---
+spring:
+  profiles: local
+
+logging:
+  config: classpath:log4j2-${spring.profiles}.xml
+---
+spring:
+  profiles: dev
+---
+spring:
+  profiles: stg
+---
+spring:
+  profiles: prod
