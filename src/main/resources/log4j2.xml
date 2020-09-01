@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--The tutorial for this is present https://stackify.com/log4j2-java/-->
 <Configuration status="WARN">
+    <Properties>
+        <Property name="log.dir">logs</Property> <!-- TODO: use this, but it doesnt seem to work $${spring:logging.file.path} -->
+        <Property name="log.file.name.without.log.suffix">log-sample</Property> <!-- TODO: use this, but it doesnt seem to work  $${spring:spring.application.name}.log -->
+    </Properties>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT" >
 <!--            <PatternLayout pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } -&#45;&#45; [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />-->
 <!--            <PatternLayout pattern="%style(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %style(${LOG_LEVEL_PATTERN:-%5p}) %style(${PID:- }){magenta} %style(-&#45;&#45;){faint} %style([%15.15t]){faint} %style(%-40.40logger{39}){cyan} %style(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />-->
-            <PatternLayout pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} %highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} ${PID:- } --- [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+            <PatternLayout pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} %highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} ${PID:- } --- [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" /> <!-- ${} doesnt resolve env variables, need to be probably updated to Property or use env: -->
         </Console>
-        <RollingFile name="RollingFileAppender" fileName="$${spring:logging.file.path}/$${spring:spring.application.name}.log" filePattern="$${spring:logging.file.path}/$${spring:spring.application.name}-%i.log">
+        <RollingFile name="RollingFileAppender" fileName="${log.dir}/${log.file.name.without.log.suffix}.log" filePattern="${log.dir}/${log.file.name.without.log.suffix}-%i.log">
             <PatternLayout pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB" />
             </Policies>
             <DefaultRolloverStrategy max="5" />
         </RollingFile>
-        <Failover name="FailoverAppender" primary="RollingFileAppender">
+        <Failover name="FailoverAppender" primary="RollingFileAppender"> <!-- Failover to console is not working upon reducing to read only, probably a flush miss -->
             <Failovers>
                 <AppenderRef ref="Console" />
             </Failovers>
@@ -23,10 +27,11 @@
     <Loggers>
         <Logger name="edu.san.springboot.eduspringbootlog4j2" level="DEBUG" additivity="false">
             <AppenderRef ref="RollingFileAppender" />
+<!--            <AppenderRef ref="FailoverAppender" />-->
         </Logger>
         <Root level="INFO">
-<!--            <AppenderRef ref="Console" />-->
             <AppenderRef ref="RollingFileAppender" />
+<!--            <AppenderRef ref="FailoverAppender" />-->
         </Root>
     </Loggers>
 </Configuration>
